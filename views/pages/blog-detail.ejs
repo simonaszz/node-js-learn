@@ -1,0 +1,16 @@
+<%- include('../partials/head') %> <%- include('../partials/nav') %>
+
+<section class="container">
+  <article class="card">
+    <% if (blog.image) { %>
+      <img src="<%= blog.image %>" alt="<%= blog.title %>" />
+    <% } %>
+
+    <div class="card_body">
+      <h1 class="card_title"><%= blog.title %></h1>
+      <p><em><%= blog.author %></em></p>
+      <p><%= blog.content %></p>
+      <p><a href="/blog">← Atgal į sąrašą</a></p>
+    </div>
+  </article>
+</section>

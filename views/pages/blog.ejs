@@ -1,0 +1,37 @@
+<%- include('../partials/head') %> <%- include('../partials/nav') %>
+
+<section class="container">
+  <% if (blogs.length > 0) { %>
+    <div class="blog_cards">
+      <% blogs.forEach(blog => { %>
+        <% const slug = blog.title
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-ėąčęįšųūž]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-'); %>
+        <article class="card">
+          <!-- Image on top -->
+          <a href="/blog/<%= slug %>">
+          <img src="<%= blog.image %>" alt="<%= blog.title %>" />
+          </a>
+
+          <!-- Jai tekstas ilgesnis nei 160 zenklu -->
+          <div class="card_body">
+            <h2 class="card_title"><a href="/blog/<%= slug %>"><%= blog.title %></a></h2>
+            <p>
+              <%= blog.content && blog.content.length > 160
+                  ? blog.content.substring(0, 160) + '...'
+                  : blog.content %>
+            </p>
+            <p><em><%= blog.author %></em></p>
+            <p><a href="/blog/<%= slug %>">Perskaityti visą tekstą →</a></p>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <p>Nėra pamokų</p>
+  <% } %>
+</section>
+
+<%- include('../partials/footer') %>
