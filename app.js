@@ -8,6 +8,10 @@ app.set('view engine', 'ejs');
 app.set('views', './views');
 app.use(express.static(path.join(__dirname, 'public')));
 
+// JSON body parser (reikalingas POST užklausoms)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Globalūs kintamieji
 app.locals.menu = [
     { title: 'Pradžia', link: '/' },
@@ -20,6 +24,10 @@ app.locals.menu = [
 // Maršrutai
 const blogRoutes = require('./src/routes/blogRoutes');
 app.use('/blog', blogRoutes);
+
+// API maršrutai
+const apiRoutes = require('./src/routes/api');
+app.use('/api', apiRoutes);
 
 // Pagrindiniai puslapiai
 app.get('/', (req, res) => {

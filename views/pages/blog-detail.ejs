@@ -2,15 +2,222 @@
 
 <section class="container">
   <article class="card">
-    <% if (blog.image) { %>
+    <div class="image">
+       <% if (blog.image) { %>
       <img src="<%= blog.image %>" alt="<%= blog.title %>" />
     <% } %>
+    </div>
 
     <div class="card_body">
       <h1 class="card_title"><%= blog.title %></h1>
       <p><em><%= blog.author %></em></p>
-      <p><%= blog.content %></p>
+      <div class="blog-content"><%= blog.content %></div>
       <p><a href="/blog">← Atgal į sąrašą</a></p>
     </div>
   </article>
+
+  <!-- Komentarų sekcija -->
+  <section class="comments-section">
+    <h2>Komentarai</h2>
+
+    <!-- Komentarų forma -->
+    <div class="comment-form-container">
+      <h3>Palikti komentarą</h3>
+      <form id="commentForm" class="comment-form">
+        <div class="form-group">
+          <label for="author">Jūsų vardas:</label>
+          <input type="text" id="author" name="authorName" required minlength="2" placeholder="Įveskite savo vardą">
+        </div>
+
+        <div class="form-group">
+          <label for="content">Komentaras:</label>
+          <textarea id="content" name="commentContent" rows="4" required minlength="5" placeholder="Pasidalinkite savo mintimis..."></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">Skelbti komentarą</button>
+      </form>
+    </div>
+
+    <!-- Komentarų sąrašas -->
+    <div id="commentsList" class="comments-list">
+      <!-- Komentarai bus įkelti čia -->
+    </div>
+  </section>
 </section>
+
+<script>
+  // Komentarų funkcionalumas
+  class CommentSystem {
+    constructor(blogPostId) {
+      this.blogPostId = blogPostId;
+      this.init();
+    }
+
+    init() {
+      this.loadComments();
+      this.setupForm();
+    }
+
+    setupForm() {
+      const form = document.getElementById('commentForm');
+      form.addEventListener('submit', (event) => this.handleSubmit(event));
+    }
+
+    async loadComments() {
+      try {
+        const response = await fetch(`/api/blog/${this.blogPostId}/comments`);
+        const data = await response.json();
+
+        if (data.success) {
+          this.displayComments(data.blogComments);
+        }
+      } catch (error) {
+        console.error('Klaida įkeliant komentarus:', error);
+      }
+    }
+
+    async handleSubmit(event) {
+      event.preventDefault();
+
+      const formData = new FormData(event.target);
+      const commentData = {
+        authorName: formData.get('authorName'),
+        commentContent: formData.get('commentContent')
+      };
+
+      try {
+        const response = await fetch(`/api/blog/${this.blogPostId}/comments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(commentData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          event.target.reset();
+          this.loadComments(); // Perkrauti komentarus
+          this.showMessage('Komentaras sėkmingai paskelbtas!', 'success');
+        } else {
+          this.showMessage(data.message, 'error');
+        }
+      } catch (error) {
+        console.error('Klaida siunčiant komentarą:', error);
+        this.showMessage('Klaida siunčiant komentarą. Bandykite dar kartą.', 'error');
+      }
+    }
+
+    displayComments(blogComments) {
+      const container = document.getElementById('commentsList');
+
+      // Jei tuščias
+      if (blogComments.length === 0) {
+        container.innerHTML = '<p class="no-comments">Dar nėra komentarų. Būkite pirmas!</p>';
+        return;
+      }
+
+      // VARIANTAS SU forEach (vietoj map)
+      let html = '';  // ← Pradinis tuščias string
+      
+      blogComments.forEach(comment => {
+        // Pradedame komentaro HTML
+        html += `<div class="comment">`;
+        
+        // Header su autoriumi ir data
+        html += `
+          <div class="comment-header">
+            <strong class="comment-author">${this.escapeHtml(comment.authorName)}</strong>
+            <span class="comment-date">${this.formatDate(comment.createdAtDate)}</span>
+          </div>
+        `;
+        
+        // Komentaro turinys
+        html += `
+          <div class="comment-content">
+            ${this.escapeHtml(comment.commentContent)}
+          </div>
+        `;
+        
+        // REPLIES (atsakymai) - jei yra
+        if (comment.replies && comment.replies.length > 0) {
+          html += `<div class="replies">`;
+          html += `<h4">Atsakymai (${comment.replies.length}):</h4>`;
+          
+          // forEach per replies
+          comment.replies.forEach(reply => {
+            html += `
+              <div class="reply">
+                <div>
+                  <strong>${this.escapeHtml(reply.authorName)}</strong>
+                  <span>${this.formatDate(reply.createdAtDate)}</span>
+                </div>
+                <div>
+                  ${this.escapeHtml(reply.replyContent)}
+                </div>
+              </div>
+            `;
+          });
+          
+          html += `</div>`; // Uždaryti replies div
+        }
+        
+        html += `</div>`; // Uždaryti comment div
+      });
+      
+      // Įdėti sugeneruotą HTML į konteinerį
+      container.innerHTML = html;
+    }
+
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('lt-LT') + ' ' + date.toLocaleTimeString('lt-LT', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    showMessage(message, type) {
+      // Pašalinti esamą pranešimą
+      const existingMessage = document.querySelector('.message');
+      if (existingMessage) {
+        existingMessage.remove();
+      }
+
+      // Sukurti naują pranešimą
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message message-${type}`;
+      messageDiv.textContent = message;
+
+      // Įterpti po forma
+      const form = document.getElementById('commentForm');
+      form.parentNode.insertBefore(messageDiv, form.nextSibling);
+
+      // Pašalinti pranešimą po 5 sekundžių
+      setTimeout(() => {
+        if (messageDiv.parentNode) {
+          messageDiv.remove();
+        }
+      }, 5000);
+    }
+  }
+
+  // Inicializuoti komentarų sistemą, kai puslapis užsikrauna
+  document.addEventListener('DOMContentLoaded', function() {
+    // Gauti blog ID iš serverio perduoto kintamojo
+    const blogPostId = '<%= blogId %>';
+
+    if (blogPostId) {
+      new CommentSystem(blogPostId);
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>
