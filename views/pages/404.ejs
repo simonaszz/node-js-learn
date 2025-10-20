@@ -1,0 +1,52 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<main class="container error-page">
+  <div class="error-content">
+    <!-- Didelis 404 skaičius -->
+    <h1 class="error-code">404</h1>
+    
+    <!-- Antraštė -->
+    <h2>Ups! Puslapis Nerastas</h2>
+    
+    <!-- Pranešimas -->
+    <p class="error-message">
+      <% if (typeof message !== 'undefined' && message) { %>
+        <%= message %>
+      <% } else { %>
+        Atsiprašome, bet puslapis <code><%= url %></code> neegzistuoja.
+      <% } %>
+    </p>
+    
+    <!-- Emoji ir papildomas tekstas -->
+    <div class="error-emoji">🤔</div>
+    <p class="mt-1">
+      Galbūt jis buvo perkeltas arba URL yra neteisingas?
+    </p>
+    
+    <!-- Mygtukai -->
+    <div class="error-actions">
+      <a href="/" class="btn btn-primary">
+        🏠 Į Pradžią
+      </a>
+      <a href="/blog" class="btn btn-secondary">
+        📝 Tinklaraštis
+      </a>
+      <a href="/create" class="btn btn-success">
+        ➕ Sukurti Įrašą
+      </a>
+    </div>
+    
+    <!-- Papildomi linkai -->
+    <div class="helpful-links">
+      <p><strong>Galbūt ieškote:</strong></p>
+      <ul>
+        <li><a href="/toys">Žaislų katalogas</a></li>
+        <li><a href="/toy-rent">Žaislų nuoma</a></li>
+        <li><a href="/contact">Kontaktai</a></li>
+      </ul>
+    </div>
+  </div>
+ </main>
+
+<%- include('../partials/footer') %>

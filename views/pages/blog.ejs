@@ -1,36 +1,59 @@
-<%- include('../partials/head') %> <%- include('../partials/nav') %>
+<%- include('../partials/head') %> 
+<%- include('../partials/nav') %>
 
 <section class="container">
+  <h1 class="page-title">📝 Tinklaraštis</h1>
+  
+  <!-- Mygtukas naujam įrašui -->
+  <div class="mb-2">
+    <a href="/create" class="btn btn-create">
+      ➕ Sukurti Naują Įrašą
+    </a>
+  </div>
+  
   <% if (blogs.length > 0) { %>
     <div class="blog_cards">
       <% blogs.forEach(blog => { %>
-        <% const slug = blog.title
-                .toLowerCase()
-                .replace(/[^a-z0-9\s-ėąčęįšųūž]/g, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-'); %>
         <article class="card">
-          <!-- Image on top -->
-          <a href="/blog/<%= slug %>">
-          <img src="<%= blog.image %>" alt="<%= blog.title %>" />
+          <!-- Nuotrauka -->
+          <a href="/blog/<%= blog.id %>">
+            <img src="<%= blog.image %>" alt="<%= blog.title %>" />
           </a>
 
-          <!-- Jai tekstas ilgesnis nei 160 zenklu -->
+          <!-- Turinys -->
           <div class="card_body">
-            <h2 class="card_title"><a href="/blog/<%= slug %>"><%= blog.title %></a></h2>
-            <p>
-              <%= blog.content && blog.content.length > 160
-                  ? blog.content.substring(0, 160) + '...'
-                  : blog.content %>
+            <!-- Pavadinimas -->
+            <h2 class="card_title">
+              <a href="/blog/<%= blog.id %>"><%= blog.title %></a>
+            </h2>
+            
+            <!-- Santrauka (snippet) -->
+            <p class="blog-snippet">
+              <%= blog.snippet || (blog.body && blog.body.substring(0, 160) + '...') %>
             </p>
+            
+            <!-- Autorius -->
             <p><em><%= blog.author %></em></p>
-            <p><a href="/blog/<%= slug %>">Perskaityti visą tekstą →</a></p>
+            
+            <!-- Data -->
+            <% if (blog.createdAt) { %>
+              <p class="blog-date">
+                📅 <%= new Date(blog.createdAt).toLocaleDateString('lt-LT') %>
+              </p>
+            <% } %>
+            
+            <!-- Skaityti daugiau -->
+            <p>
+              <a href="/blog/<%= blog.id %>" class="read-more">
+                Perskaityti visą tekstą →
+              </a>
+            </p>
           </div>
         </article>
       <% }) %>
     </div>
   <% } else { %>
-    <p>Nėra pamokų</p>
+    <p class="no-blogs">Dar nėra blog įrašų. <a href="/create">Sukurkite pirmąjį!</a></p>
   <% } %>
 </section>
 

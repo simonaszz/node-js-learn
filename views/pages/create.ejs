@@ -1,0 +1,97 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+
+<main class="container page-narrow">
+  <h1 class="page-title mb-2">✏️ Sukurti Naują Blog Įrašą</h1>
+  
+  <!-- Klaidos pranešimas (jei yra) -->
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-error">
+      ⚠️ <%= error %>
+    </div>
+  <% } %>
+  
+  <!-- Blog kūrimo forma -->
+  <form action="/create" method="POST" class="blog-form">
+    
+    <!-- Pavadinimas -->
+    <div class="form-group">
+      <label for="title">Pavadinimas *</label>
+      <input 
+        type="text" 
+        id="title" 
+        name="title" 
+        required
+        minlength="5"
+        placeholder="Pvz.: TOP lavinamieji žaislai..."
+        value="<%= typeof formData !== 'undefined' ? formData.title || '' : '' %>"
+      >
+      <small>Mažiausiai 5 simboliai</small>
+    </div>
+    
+    <!-- Santrauka -->
+    <div class="form-group">
+      <label for="snippet">Santrauka *</label>
+      <textarea 
+        id="snippet" 
+        name="snippet" 
+        rows="3" 
+        required
+        placeholder="Trumpas įrašo aprašymas, kuris bus rodomas sąraše..."
+      ><%= typeof formData !== 'undefined' ? formData.snippet || '' : '' %></textarea>
+      <small>Trumpas aprašymas (1-2 sakiniai)</small>
+    </div>
+    
+    <!-- Turinys -->
+    <div class="form-group">
+      <label for="body">Turinys *</label>
+      <textarea 
+        id="body" 
+        name="body" 
+        rows="15" 
+        required
+        placeholder="Pilnas straipsnio turinys..."
+      ><%= typeof formData !== 'undefined' ? formData.body || '' : '' %></textarea>
+      <small>Pilnas straipsnio tekstas</small>
+    </div>
+    
+    <!-- Autorius -->
+    <div class="form-group">
+      <label for="author">Autorius</label>
+      <input 
+        type="text" 
+        id="author" 
+        name="author"
+        placeholder="Pvz.: Vardas Pavardė, specialybė"
+        value="<%= typeof formData !== 'undefined' ? formData.author || '' : '' %>"
+      >
+      <small>Neprivaloma (jei neužpildysite, bus "Anonimas")</small>
+    </div>
+    
+    <!-- Nuotrauka -->
+    <div class="form-group">
+      <label for="image">Nuotraukos URL</label>
+      <input 
+        type="text" 
+        id="image" 
+        name="image"
+        placeholder="/images/blog.png"
+        value="<%= typeof formData !== 'undefined' ? formData.image || '' : '' %>"
+      >
+      <small>Kelias iki nuotraukos (neprivaloma)</small>
+    </div>
+    
+    <!-- Mygtukai -->
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        ✅ Sukurti Įrašą
+      </button>
+      <a href="/blog" class="btn btn-secondary">
+        ❌ Atšaukti
+      </a>
+    </div>
+    
+  </form>
+</main>
+
+<%- include('../partials/footer') %>

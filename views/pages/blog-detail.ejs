@@ -11,11 +11,29 @@
     <div class="card_body">
       <h1 class="card_title"><%= blog.title %></h1>
       <p><em><%= blog.author %></em></p>
-      <div class="blog-content"><%= blog.content %></div>
-      <p><a href="/blog">← Atgal į sąrašą</a></p>
+      
+      <!-- Blog datos -->
+      <% if (blog.createdAt) { %>
+        <p class="blog-meta">
+          📅 Paskelbta: <%= new Date(blog.createdAt).toLocaleDateString('lt-LT') %>
+        </p>
+      <% } %>
+      
+      <!-- Blog turinys -->
+      <div class="blog-content">
+        <%- (blog.body || blog.content).replace(/\n/g, '<br>') %>
+      </div>
+      
+      <!-- Blog veiksmai -->
+      <div class="blog-actions">
+        <a href="/blog" class="btn btn-back">← Atgal į sąrašą</a>
+        <button onclick="deleteBlog('<%= blogId %>')" class="btn btn-delete">
+          🗑️ Ištrinti Įrašą
+        </button>
+      </div>
     </div>
   </article>
-
+  
   <!-- Komentarų sekcija -->
   <section class="comments-section">
     <h2>Komentarai</h2>
@@ -143,7 +161,7 @@
         // REPLIES (atsakymai) - jei yra
         if (comment.replies && comment.replies.length > 0) {
           html += `<div class="replies">`;
-          html += `<h4">Atsakymai (${comment.replies.length}):</h4>`;
+          html += `<h4 class="replies-title">Atsakymai (${comment.replies.length})</h4>`;
           
           // forEach per replies
           comment.replies.forEach(reply => {
@@ -163,11 +181,73 @@
           html += `</div>`; // Uždaryti replies div
         }
         
+        // Atsakymo forma kiekvienam komentarui (paslėpta pagal nutylėjimą)
+        html += `
+          <div class="reply-box">
+            <button type="button" class="toggle-reply" data-comment-id="${comment._id}" aria-expanded="false">↩️ Atsakyti į šį komentarą</button>
+            <form class="reply-form" data-comment-id="${comment._id}" style="display:none; margin-top:8px;">
+              <div class="form-group">
+                <label>Jūsų vardas</label>
+                <input type="text" name="authorName" required minlength="2" placeholder="Pvz.: Jonas" />
+              </div>
+              <div class="form-group">
+                <label>Jūsų atsakymas</label>
+                <textarea name="replyContent" rows="2" required minlength="2" placeholder="Parašykite atsakymą..."></textarea>
+              </div>
+              <button type="submit" class="submit-reply-btn">Paskelbti atsakymą</button>
+            </form>
+          </div>
+        `;
+
         html += `</div>`; // Uždaryti comment div
       });
       
       // Įdėti sugeneruotą HTML į konteinerį
       container.innerHTML = html;
+
+      // Pririšti "Atsakyti" mygtukų toggle
+      document.querySelectorAll('.toggle-reply').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-comment-id');
+          const form = document.querySelector(`form.reply-form[data-comment-id="${id}"]`);
+          const isHidden = form.style.display === 'none';
+          form.style.display = isHidden ? 'block' : 'none';
+          btn.setAttribute('aria-expanded', String(isHidden));
+        });
+      });
+
+      // Pririšti atsakymo formų submit įvykius
+      document.querySelectorAll('.reply-form').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const commentId = form.getAttribute('data-comment-id');
+          const formData = new FormData(form);
+          const payload = {
+            authorName: formData.get('authorName'),
+            replyContent: formData.get('replyContent')
+          };
+
+          try {
+            const resp = await fetch(`/api/blog/${this.blogPostId}/comments/${commentId}/replies`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (data.success) {
+              form.reset();
+              form.style.display = 'none';
+              this.loadComments();
+              this.showMessage('Atsakymas sėkmingai pridėtas!', 'success');
+            } else {
+              this.showMessage(data.message || 'Nepavyko pridėti atsakymo', 'error');
+            }
+          } catch (err) {
+            console.error('Klaida siunčiant atsakymą:', err);
+            this.showMessage('Klaida siunčiant atsakymą. Bandykite dar kartą.', 'error');
+          }
+        });
+      });
     }
 
     formatDate(dateString) {
@@ -218,6 +298,58 @@
       new CommentSystem(blogPostId);
     }
   });
+
+  /**
+   * Blog Delete Funkcija
+   * 
+   * Kaip veikia:
+   * 1. Vartotojas paspaudžia "Ištrinti" mygtuką
+   * 2. Iššaukiama ši funkcija su blog ID
+   * 3. Patvirtinimo dialogas (confirm)
+   * 4. Fetch DELETE užklausa į serverį
+   * 5. Serveris ištrina iš blogs.json
+   * 6. Redirect į blog sąrašą
+   */
+  async function deleteBlog(blogId) {
+    // ŽINGSNIS 1: Patvirtinimas
+    // confirm() grąžina true jei vartotojas paspaudė OK, false jei Cancel
+    const confirmed = confirm('Ar tikrai norite ištrinti šį blog įrašą? Šis veiksmas neatšaukiamas!');
+    
+    if (!confirmed) {
+      return; // Jei Cancel - nieko nedaryti
+    }
+    
+    try {
+      // ŽINGSNIS 2: Siųsti DELETE užklausą
+      const response = await fetch(`/blog/${blogId}`, {
+        method: 'DELETE', // DELETE metodas (ne GET, ne POST)
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      // ŽINGSNIS 3: Parsinti atsakymą
+      const data = await response.json();
+      
+      // ŽINGSNIS 4: Tikrinti ar sėkminga
+      if (data.success) {
+        // Rodyti pranešimą
+        alert('✅ Blog įrašas sėkmingai ištrintas!');
+        
+        // Redirect į blog sąrašą
+        window.location.href = data.redirectUrl || '/blog';
+        
+      } else {
+        // Klaida iš serverio
+        alert('❌ Klaida: ' + data.message);
+      }
+      
+    } catch (error) {
+      // Network klaida arba serveris neveikia
+      console.error('Klaida trinant blog:', error);
+      alert('❌ Nepavyko ištrinti blog įrašo. Patikrinkite interneto ryšį.');
+    }
+  }
 </script>
 
 <%- include('../partials/footer') %>
