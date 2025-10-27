@@ -1,3 +1,7 @@
+/**
+ * slugify(text): sukuria URL-friendly šliužą.
+ * Veiksmai: mažosios raidės, pašalina neleidžiamus simbolius, tarpus keičia į '-', suvienodina daugkartinius '-'.
+ */
 function slugify(text) {
     return text
         .toLowerCase()

@@ -1,7 +1,12 @@
+/**
+ * Mongoose modelis: BlogComment.
+ * Palaiko atsakymų (replies) masyvą ir laiko žymes `createdAtDate`.
+ * `blogPostId` nurodo susieto `Blog` dokumento ObjectId.
+ */
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// Komentaro atsakymo (reply) poschema
+// Atsakymo (reply) poschema, be atskiro _id
 const replySchema = new Schema({
   replyId: { type: String },
   authorName: { type: String, trim: true },

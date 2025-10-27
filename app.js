@@ -12,8 +12,10 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
+const { connectToDatabase } = require('./src/config/database');
 const app = express();
 const PORT = 3000;
+const PagesRoutes = require('./src/routes/PagesRouter');
 
 // ============================================
 // MIDDLEWARE (tvarka SVARBI!)
@@ -78,15 +80,10 @@ app.locals.menu = [
  * Blog Routes
  * Visos routes pradeda su /blog
  */
-const blogRoutes = require('./src/routes/blogRoutes');
-app.use('/blog', blogRoutes);
+const blogRouter = require('./src/routes/BlogRouter');
+app.use('/blog', blogRouter);
 
-/**
- * Create Route (atskirai, nes /create, ne /blog/create)
- */
-const { showCreateForm, createNewBlog } = require('./src/controllers/blogController');
-app.get('/create', showCreateForm);
-app.post('/create', createNewBlog);
+
 
 /**
  * API Routes (komentarams)
@@ -97,26 +94,7 @@ app.use('/api', apiRoutes);
 /**
  * Pagrindiniai statiniai puslapiai
  */
-app.get('/', (req, res) => {
-    res.render('pages/index', { title: 'Žaislų Pasaulis' });
-});
-
-app.get('/toys', (req, res) => {
-    res.render('pages/toys', { title: 'Žaislai' });
-});
-
-app.get('/toy-rent', (req, res) => {
-    res.render('pages/toy-rent', { title: 'Žaislų nuoma' });
-});
-
-app.get('/contact', (req, res) => {
-    res.render('pages/contact', { title: 'Kontaktai' });
-});
-
-app.get('/services', (req, res) => {
-    res.render('pages/services', { title: 'Paslaugos' });
-});
-
+app.use('/', PagesRoutes);
 // ============================================
 // 404 ERROR HANDLER (PASKUTINIS!)
 // ============================================
@@ -138,15 +116,14 @@ app.use((req, res) => {
 // DB CONNECTION + SERVER START
 // ============================================
 
-// Vienas DB prisijungimas su dbURI ir serverio startas po sėkmės
-const dbURI = 'mongodb+srv://simonas:Herkus08080512@cluster0.kpkgza3.mongodb.net/blogdb?retryWrites=true&w=majority&appName=Cluster0';
-mongoose.connect(dbURI)
+// Vienas DB prisijungimas su MONGO_URI iš .env ir serverio startas po sėkmės
+connectToDatabase()
   .then(() => {
     console.log('prisijungta');
     app.listen(PORT, () => {
       console.log(`✅ Serveris veikia: http://localhost:${PORT}`);
       console.log(`📁 Tinklaraštis: http://localhost:${PORT}/blog`);
-      console.log(`➕ Sukurti įrašą: http://localhost:${PORT}/create`);
+      console.log(`➕ Sukurti įrašą: http://localhost:${PORT}/blog/create`);
     });
   })
   .catch(err => console.log(err));

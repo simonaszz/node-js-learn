@@ -27,6 +27,7 @@
       <!-- Blog veiksmai -->
       <div class="blog-actions">
         <a href="/blog" class="btn btn-back">← Atgal į sąrašą</a>
+        <a href="/blog/<%= blogId %>/edit" class="btn btn-edit">✏️ Redaguoti</a>
         <button onclick="deleteBlog('<%= blogId %>')" class="btn btn-delete">
           🗑️ Ištrinti Įrašą
         </button>
@@ -157,6 +158,14 @@
             ${this.escapeHtml(comment.commentContent)}
           </div>
         `;
+
+        // Veiksmai su komentarais (redaguoti / trinti)
+        html += `
+          <div class="comment-actions" style="margin-top:8px; display:flex; gap:8px;">
+            <button type="button" class="btn btn-edit btn-sm edit-comment" data-comment-id="${comment._id}">✏️ Redaguoti</button>
+            <button type="button" class="btn btn-delete btn-sm delete-comment" data-comment-id="${comment._id}">🗑️ Trinti</button>
+          </div>
+        `;
         
         // REPLIES (atsakymai) - jei yra
         if (comment.replies && comment.replies.length > 0) {
@@ -248,6 +257,36 @@
           }
         });
       });
+
+      // Pririšti REDAGUOTI komentarą
+      document.querySelectorAll('.edit-comment').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-comment-id');
+          this.enterEditModeForComment(id);
+        });
+      });
+
+      // Pririšti TRINTI komentarą
+      document.querySelectorAll('.delete-comment').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-comment-id');
+          const confirmed = confirm('Ar tikrai norite ištrinti šį komentarą?');
+          if (!confirmed) return;
+          try {
+            const resp = await fetch(`/api/blog/${this.blogPostId}/comments/${id}`, { method: 'DELETE' });
+            const data = await resp.json();
+            if (data.success) {
+              this.loadComments();
+              this.showMessage('Komentaras sėkmingai ištrintas!', 'success');
+            } else {
+              this.showMessage(data.message || 'Nepavyko ištrinti komentaro', 'error');
+            }
+          } catch (err) {
+            console.error('Klaida trinant komentarą:', err);
+            this.showMessage('Klaida trinant komentarą. Bandykite dar kartą.', 'error');
+          }
+        });
+      });
     }
 
     formatDate(dateString) {
@@ -311,13 +350,24 @@
    * 6. Redirect į blog sąrašą
    */
   async function deleteBlog(blogId) {
-    // ŽINGSNIS 1: Patvirtinimas
-    // confirm() grąžina true jei vartotojas paspaudė OK, false jei Cancel
-    const confirmed = confirm('Ar tikrai norite ištrinti šį blog įrašą? Šis veiksmas neatšaukiamas!');
-    
-    if (!confirmed) {
-      return; // Jei Cancel - nieko nedaryti
+    // ŽINGSNIS 0: Patikrinti ar įrašas egzistuoja
+    try {
+      const existsResp = await fetch(`/blog/${blogId}/exists`);
+      const existsData = await existsResp.json();
+      if (!existsData.success || !existsData.exists) {
+        alert('❌ Įrašas nerastas arba jau ištrintas.');
+        window.location.href = '/blog';
+        return;
+      }
+    } catch (e) {
+      console.error('Klaida tikrinant egzistavimą:', e);
+      alert('❌ Nepavyko patikrinti įrašo egzistavimo.');
+      return;
     }
+
+    // ŽINGSNIS 1: Patvirtinimas
+    const confirmed = confirm('Ar tikrai norite ištrinti šį blog įrašą? Šis veiksmas neatšaukiamas!');
+    if (!confirmed) return;
     
     try {
       // ŽINGSNIS 2: Siųsti DELETE užklausą

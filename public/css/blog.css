@@ -6,16 +6,21 @@
 
 /* Buttons (shared) */
 .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.2s; }
+.btn-sm { padding: 0.35rem 0.75rem; font-size: 0.875rem; border-radius: 6px; }
 .btn-primary { background-color: #3b82f6; color: #fff; }
 .btn-primary:hover { background-color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59,130,246,.3); }
 .btn-secondary { background-color: #6b7280; color: #fff; }
 .btn-secondary:hover { background-color: #4b5563; }
 .btn-success { background-color: #10b981; color: #fff; }
-.btn-success:hover { background-color: #059669; }
+.btn-success:hover { background-color: #059669; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16,185,129,.3); }
 .btn-back { background-color: #6b7280; color: #fff; }
 .btn-back:hover { background-color: #4b5563; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(107,114,128,.3); }
 .btn-delete { background-color: #ef4444; color: #fff; }
 .btn-delete:hover { background-color: #dc2626; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(239,68,68,.3); }
+
+/* Edit button */
+.btn-edit { background-color: #f59e0b; color: #111827; }
+.btn-edit:hover { background-color: #d97706; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(245,158,11,.3); }
 
 /* Create form */
 .blog-form { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
@@ -27,6 +32,38 @@
 .form-actions { display: flex; gap: 1rem; margin-top: 2rem; }
 .alert { padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
 .alert-error { background-color: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+
+/* Blog list */
+
+/* Comments UI */
+.comments-section { margin-top: 2rem; }
+.comment-form-container { background: #fff; padding: 1.25rem; border-radius: 8px; box-shadow: 0 1px 6px rgba(0,0,0,.08); }
+.comment-form .submit-btn { background: #10b981; color: #fff; border: none; border-radius: 6px; padding: 0.6rem 1.1rem; font-weight: 600; cursor: pointer; transition: transform .2s, box-shadow .2s, background-color .2s; }
+.comment-form .submit-btn:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16,185,129,.3); }
+
+.comments-list { margin-top: 1rem; display: grid; gap: 1rem; }
+.comment { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+.comment-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; }
+.comment-author { color: #111827; }
+.comment-date { color: #6b7280; font-size: .9rem; }
+.comment-content { color: #374151; line-height: 1.5; }
+
+.comment-actions .btn { padding: 0.35rem 0.75rem; font-size: 0.875rem; }
+
+.replies { margin-top: .75rem; padding-left: 1rem; border-left: 3px solid #e5e7eb; }
+.replies-title { margin: .25rem 0 .5rem; font-size: .95rem; color: #6b7280; }
+.reply { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: .6rem .75rem; margin-bottom: .5rem; }
+
+.reply-box { margin-top: .5rem; }
+.toggle-reply { background: transparent; border: 1px solid #e5e7eb; color: #374151; border-radius: 6px; padding: 0.35rem 0.75rem; cursor: pointer; transition: background-color .2s, transform .2s, box-shadow .2s; }
+.toggle-reply:hover { background: #f3f4f6; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+.reply-form .submit-reply-btn { background: #3b82f6; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 0.9rem; font-weight: 600; cursor: pointer; transition: transform .2s, box-shadow .2s, background-color .2s; }
+.reply-form .submit-reply-btn:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59,130,246,.3); }
+
+/* Inline messages below forms */
+.message { margin-top: .75rem; padding: .6rem .9rem; border-radius: 6px; font-weight: 600; }
+.message-success { background: #ecfdf5; color: #065f46; border-left: 4px solid #10b981; }
+.message-error { background: #fef2f2; color: #991b1b; border-left: 4px solid #ef4444; }
 
 /* Blog list */
 .btn-create { display: inline-block; padding: 0.75rem 1.5rem; background-color: #10b981; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; transition: all 0.2s; }
