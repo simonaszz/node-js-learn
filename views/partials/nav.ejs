@@ -3,5 +3,17 @@
     <% menu.forEach(item => { %>
     <li><a href="<%= item.link %>"><%= item.title %></a></li>
     <% }) %>
+    <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+      <li class="nav-user">
+        <a href="/account" class="user-chip">
+          <span class="user-avatar"><%= (currentUser.email && currentUser.email[0] || '?').toUpperCase() %></span>
+          <span class="user-email"><%= currentUser.email %></span>
+        </a>
+        <a href="/logout" class="logout-button" style="display:inline-block; text-decoration:none; text-align:center;">Atsijungti</a>
+      </li>
+    <% } else { %>
+      <li><a href="/login">Prisijungti</a></li>
+      <li><a href="/register">Registruotis</a></li>
+    <% } %>
   </ul>
 </nav>

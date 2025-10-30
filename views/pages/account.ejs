@@ -1,0 +1,32 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container auth-page">
+  <section class="auth-card">
+    <h1 class="auth-title">Paskyra</h1>
+
+    <% if (flash) { %>
+      <div class="auth-errors" style="background:#ecfdf5; border-color:#bbf7d0; color:#166534"><%= flash.message %></div>
+    <% } %>
+
+    <% if (errors && errors.length) { %>
+      <ul class="auth-errors"><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul>
+    <% } %>
+
+    <form class="auth-form" method="post" action="/account">
+      <label class="auth-label">El. paštas</label>
+      <input class="auth-input" type="email" value="<%= profile.email %>" disabled />
+
+      <label class="auth-label">Vardas</label>
+      <input class="auth-input" name="firstName" value="<%= profile.firstName || '' %>" />
+
+      <label class="auth-label">Pavardė</label>
+      <input class="auth-input" name="lastName" value="<%= profile.lastName || '' %>" />
+
+      <label class="auth-label">Telefonas</label>
+      <input class="auth-input" name="phone" value="<%= profile.phone || '' %>" />
+
+      <button class="auth-button" type="submit">Išsaugoti</button>
+    </form>
+  </section>
+</main>
+<%- include('../partials/footer') %>

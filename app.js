@@ -16,6 +16,10 @@ const { connectToDatabase } = require('./src/config/database');
 const app = express();
 const PORT = 3000;
 const PagesRoutes = require('./src/routes/PagesRouter');
+const authRouter = require('./src/routes/AuthRouter');
+const accountRouter = require('./src/routes/AccountRouter');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
 
 // ============================================
 // MIDDLEWARE (tvarka SVARBI!)
@@ -49,6 +53,39 @@ app.use(express.static(path.join(__dirname, 'public')));
  */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Fail-fast: required env vars
+if (!process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET is not set. Please define it in your .env file.');
+}
+if (!process.env.MONGO_URI) {
+  throw new Error('MONGO_URI is not set. Please define it in your .env file.');
+}
+
+// Sessions (Mongo store)
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: 'sessions'
+  }),
+  cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 }
+}));
+
+// Expose currentUser to EJS (safe even if sessions are not configured yet)
+app.use((req, res, next) => {
+  res.locals.currentUser = (req.session && req.session.user) || null;
+  // Flash messages
+  if (req.session && req.session.flash) {
+    res.locals.flash = req.session.flash;
+    delete req.session.flash;
+  } else {
+    res.locals.flash = null;
+  }
+  next();
+});
 
 /**
  * 4. VIEW ENGINE
@@ -94,6 +131,8 @@ app.use('/api', apiRoutes);
 /**
  * Pagrindiniai statiniai puslapiai
  */
+app.use('/', authRouter);
+app.use('/', accountRouter);
 app.use('/', PagesRoutes);
 // ============================================
 // 404 ERROR HANDLER (PASKUTINIS!)
