@@ -5,7 +5,7 @@
     <% }) %>
     <% if (typeof currentUser !== 'undefined' && currentUser) { %>
       <li class="nav-user">
-        <a href="/account" class="user-chip">
+        <a href="/dashboard" class="user-chip">
           <span class="user-avatar"><%= (currentUser.email && currentUser.email[0] || '?').toUpperCase() %></span>
           <span class="user-email"><%= currentUser.email %></span>
         </a>

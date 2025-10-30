@@ -27,10 +27,12 @@
       <!-- Blog veiksmai -->
       <div class="blog-actions">
         <a href="/blog" class="btn btn-back">← Atgal į sąrašą</a>
-        <a href="/blog/<%= blogId %>/edit" class="btn btn-edit">✏️ Redaguoti</a>
-        <button onclick="deleteBlog('<%= blogId %>')" class="btn btn-delete">
-          🗑️ Ištrinti Įrašą
-        </button>
+        <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin') { %>
+          <a href="/blog/<%= blogId %>/edit" class="btn btn-edit">✏️ Redaguoti</a>
+          <button onclick="deleteBlog('<%= blogId %>')" class="btn btn-delete">
+            🗑️ Ištrinti Įrašą
+          </button>
+        <% } %>
       </div>
     </div>
   </article>
@@ -227,8 +229,8 @@
 
       // Pririšti atsakymo formų submit įvykius
       document.querySelectorAll('.reply-form').forEach(form => {
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
           const commentId = form.getAttribute('data-comment-id');
           const formData = new FormData(form);
           const payload = {

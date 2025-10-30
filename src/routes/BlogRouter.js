@@ -6,6 +6,8 @@ const express = require('express');
 const { BlogRepository } = require('../repositories/BlogRepository');
 const { BlogService } = require('../services/BlogService');
 const BlogController = require('../controllers/BlogController');
+const requireAuth = require('../middleware/requireAuth');
+const requireAdmin = require('../middleware/requireAdmin');
 
 class BlogRouter {
   constructor() {
@@ -23,25 +25,25 @@ class BlogRouter {
     this.router.get('/', this.controller.getBlogList.bind(this.controller));
 
     // GET /blog/create — kūrimo forma
-    this.router.get('/create', this.controller.showCreateForm.bind(this.controller));
+    this.router.get('/create', requireAuth, requireAdmin, this.controller.showCreateForm.bind(this.controller));
 
     // POST /blog/create — sukurti naują įrašą
-    this.router.post('/create', this.controller.createNewBlog.bind(this.controller));
+    this.router.post('/create', requireAuth, requireAdmin, this.controller.createNewBlog.bind(this.controller));
 
     // GET /blog/:id — vieno įrašo detalės pagal MongoDB ObjectId
     this.router.get('/:id', this.controller.getBlogDetail.bind(this.controller));
 
     // GET /blog/:id/edit — redagavimo forma
-    this.router.get('/:id/edit', this.controller.showEditForm.bind(this.controller));
+    this.router.get('/:id/edit', requireAuth, requireAdmin, this.controller.showEditForm.bind(this.controller));
 
     // POST /blog/:id/edit — atnaujinti įrašą
-    this.router.post('/:id/edit', this.controller.updateBlog.bind(this.controller));
+    this.router.post('/:id/edit', requireAuth, requireAdmin, this.controller.updateBlog.bind(this.controller));
 
     // GET /blog/:id/exists — egzistavimo patikra (JSON)
     this.router.get('/:id/exists', this.controller.checkExists.bind(this.controller));
 
     // DELETE /blog/:id — įrašo trynimas pagal ID (JSON atsakas)
-    this.router.delete('/:id', this.controller.deleteBlogPost.bind(this.controller));
+    this.router.delete('/:id', requireAuth, requireAdmin, this.controller.deleteBlogPost.bind(this.controller));
   }
 
   getRouter() {

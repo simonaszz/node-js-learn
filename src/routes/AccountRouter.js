@@ -12,6 +12,7 @@ class AccountRouter {
   }
 
   initRoutes() {
+    this.router.get('/dashboard', requireAuth, this.controller.getDashboardPage.bind(this.controller));
     this.router.get('/account', requireAuth, this.controller.getProfilePage.bind(this.controller));
     this.router.post('/account', requireAuth, this.controller.postProfileUpdate.bind(this.controller));
   }

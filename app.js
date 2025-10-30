@@ -18,6 +18,7 @@ const PORT = 3000;
 const PagesRoutes = require('./src/routes/PagesRouter');
 const authRouter = require('./src/routes/AuthRouter');
 const accountRouter = require('./src/routes/AccountRouter');
+const adminRouter = require('./src/routes/AdminRouter');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
@@ -133,6 +134,7 @@ app.use('/api', apiRoutes);
  */
 app.use('/', authRouter);
 app.use('/', accountRouter);
+app.use('/', adminRouter);
 app.use('/', PagesRoutes);
 // ============================================
 // 404 ERROR HANDLER (PASKUTINIS!)

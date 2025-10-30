@@ -13,6 +13,12 @@ class AccountController {
     res.render('pages/account', { title: 'Paskyra', profile, errors: [] });
   }
 
+  async getDashboardPage(req, res) {
+    const profile = await this.accountService.getProfile(req.session.user.id);
+    if (!profile) return res.redirect('/login');
+    res.render('pages/dashboard', { title: 'Skydelis', profile });
+  }
+
   async postProfileUpdate(req, res) {
     const updated = await this.accountService.updateProfile(req.session.user.id, req.body);
     if (!updated) {

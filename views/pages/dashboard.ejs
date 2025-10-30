@@ -1,0 +1,24 @@
+<%- include('../partials/head') %>
+<%- include('../partials/nav') %>
+<main class="container">
+  <h1>Skydelis</h1>
+  <section class="cards">
+    <div class="card">
+      <h2>Mano paskyra</h2>
+      <p>Peržiūrėkite ir atnaujinkite savo paskyros informaciją.</p>
+      <a class="btn" href="/account">Atnaujinti duomenis</a>
+    </div>
+    <div class="card">
+      <h2>Naujausia veikla</h2>
+      <p>Čia ateityje bus rodoma jūsų veikla ir statistika.</p>
+    </div>
+    <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin') { %>
+      <div class="card">
+        <h2>Administravimas</h2>
+        <p>Pasiekite valdymo skydelį ir tvarkykite sistemą.</p>
+        <a class="btn" href="/admin">Eiti į administravimą</a>
+      </div>
+    <% } %>
+  </section>
+</main>
+<%- include('../partials/footer') %>

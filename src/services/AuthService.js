@@ -15,7 +15,7 @@ class AuthService {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const userDoc = await User.create({ email, passwordHash });
-    const user = { id: userDoc._id.toString(), email: userDoc.email };
+    const user = { id: userDoc._id.toString(), email: userDoc.email, role: userDoc.role };
     return { ok: true, user };
   }
 
@@ -31,7 +31,7 @@ class AuthService {
     const ok = await bcrypt.compare(password, userDoc.passwordHash);
     if (!ok) return { ok: false, errors: ['Neteisingi duomenys'] };
 
-    const user = { id: userDoc._id.toString(), email: userDoc.email };
+    const user = { id: userDoc._id.toString(), email: userDoc.email, role: userDoc.role };
     return { ok: true, user };
   }
 }

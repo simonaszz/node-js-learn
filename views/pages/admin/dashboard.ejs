@@ -1,0 +1,16 @@
+<%- include('../../partials/head') %>
+<%- include('../../partials/nav') %>
+<main class="container">
+  <h1>Administravimas</h1>
+  <p>Sveiki atvykę, <strong><%= currentUser && currentUser.email %></strong></p>
+  <section class="admin-grid">
+    <div class="card">
+      <h2>Valdymo skydelis</h2>
+      <ul>
+        <li><a href="/blog">Tvarkyti tinklaraščio įrašus</a></li>
+        <li><a href="/account">Mano paskyra</a></li>
+      </ul>
+    </div>
+  </section>
+</main>
+<%- include('../../partials/footer') %>

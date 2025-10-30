@@ -26,17 +26,17 @@
     const container = document.querySelector('.page-fade');
     if (container) requestAnimationFrame(() => container.classList.add('page-fade--in'));
   });
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('a');
-    if (!a) return;
-    const isAuthSwitch = a.matches('a[href="/login"], a[href="/register"]');
+  document.addEventListener('click', (event) => {
+    const anchorEl = event.target.closest('a');
+    if (!anchorEl) return;
+    const isAuthSwitch = anchorEl.matches('a[href="/login"], a[href="/register"]');
     if (!isAuthSwitch) return;
     const container = document.querySelector('.page-fade');
     if (!container) return;
-    e.preventDefault();
+    event.preventDefault();
     container.classList.remove('page-fade--in');
     container.classList.add('page-fade--out');
-    setTimeout(() => { window.location.href = a.href; }, 180);
+    setTimeout(() => { window.location.href = anchorEl.href; }, 180);
   });
 </script>
 <%- include('../partials/footer') %>

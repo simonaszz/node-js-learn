@@ -84,7 +84,11 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
   email: { type: String, unique: true, required: true, lowercase: true, trim: true }, // unikalus el. paštas
-  passwordHash: { type: String, required: true }                                     // bcrypt hash, ne plaintext
+  passwordHash: { type: String, required: true },                                     // bcrypt hash, ne plaintext
+  firstName: { type: String },
+  lastName: { type: String },
+  phone: { type: String },
+  role: { type: String, enum: ['user','admin'], default: 'user' }                     // RBAC rolė
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
@@ -105,18 +109,18 @@ const User = require('../models/user');
 class AuthService {
   async register({ email, password, password2 }) {
     const errors = [];
-    if (!email) errors.push('El. paštas privalomas');                  // privalomas el. paštas
-    if (!password) errors.push('Slaptažodis privalomas');              // privalomas slaptažodis
-    if (password && password.length < 6) errors.push('Slaptažodis per trumpas (>=6)'); // minimalus ilgis
-    if (password !== password2) errors.push('Slaptažodžiai nesutampa');                // sutapimas
-    if (errors.length) return { ok: false, errors };                   // ankstyvas grąžinimas klaidų
+    if (!email) errors.push('El. paštas privalomas');
+    if (!password) errors.push('Slaptažodis privalomas');
+    if (password && password.length < 6) errors.push('Slaptažodis per trumpas (>=6)');
+    if (password !== password2) errors.push('Slaptažodžiai nesutampa');
+    if (errors.length) return { ok: false, errors };
 
-    const existing = await User.findOne({ email });                    // tikriname ar užimtas el. paštas
+    const existing = await User.findOne({ email });
     if (existing) return { ok: false, errors: ['Toks el. paštas jau naudojamas'] };
 
-    const passwordHash = await bcrypt.hash(password, 12);              // saugus hash su cost factor 12
-    const userDoc = await User.create({ email, passwordHash });        // kuriame naudotoją DB
-    return { ok: true, user: { id: userDoc._id.toString(), email: userDoc.email } }; // grąžiname saugius duomenis
+    const passwordHash = await bcrypt.hash(password, 12);
+    const userDoc = await User.create({ email, passwordHash });
+    return { ok: true, user: { id: userDoc._id.toString(), email: userDoc.email, role: userDoc.role } };
   }
 
   async login({ email, password }) {
@@ -125,13 +129,13 @@ class AuthService {
     if (!password) errors.push('Slaptažodis privalomas');
     if (errors.length) return { ok: false, errors };
 
-    const userDoc = await User.findOne({ email });                     // randame naudotoją pagal email
+    const userDoc = await User.findOne({ email });
     if (!userDoc) return { ok: false, errors: ['Neteisingi duomenys'] };
 
-    const ok = await bcrypt.compare(password, userDoc.passwordHash);   // lyginame hash
+    const ok = await bcrypt.compare(password, userDoc.passwordHash);
     if (!ok) return { ok: false, errors: ['Neteisingi duomenys'] };
 
-    return { ok: true, user: { id: userDoc._id.toString(), email: userDoc.email } }; // sėkmė
+    return { ok: true, user: { id: userDoc._id.toString(), email: userDoc.email, role: userDoc.role } };
   }
 }
 
@@ -164,8 +168,8 @@ class AutorizationController {
         values: { email: req.body.email }
       });
     }
-    req.session.user = result.user;                                               // sėkmė – įrašome į sesiją
-    res.redirect('/');                                                            // ir redirectinam į pradžią
+    req.session.user = result.user;                                               // sėkmė – įrašome į sesiją (įskaitant role)
+    res.redirect('/');                                                            // redirect į pradžią
   }
 
   registerPage(req, res) {
@@ -187,9 +191,9 @@ class AutorizationController {
   }
 
   logout(req, res) {
-    req.session?.destroy(() => {                                                 // išvalome sesiją
+    req.session?.destroy(() => {
       res.clearCookie('connect.sid');
-      res.redirect('/');                                                         // grįžtame į pradžią
+      res.redirect('/');
     });
   }
 }
@@ -219,13 +223,15 @@ class AuthRouter {
   }
 
   initRoutes() {
-    this.router.get('/login', this.controller.loginPage.bind(this.controller));   // GET login forma
-    this.router.post('/login', this.controller.login.bind(this.controller));      // POST login
+    this.router.get('/login', this.controller.loginPage.bind(this.controller));
+    this.router.post('/login', this.controller.login.bind(this.controller));
 
-    this.router.get('/register', this.controller.registerPage.bind(this.controller)); // GET register forma
-    this.router.post('/register', this.controller.register.bind(this.controller));    // POST register
+    this.router.get('/register', this.controller.registerPage.bind(this.controller));
+    this.router.post('/register', this.controller.register.bind(this.controller));
 
-    this.router.post('/logout', this.controller.logout.bind(this.controller));    // POST logout
+    // Palaikome abu variantus: GET ir POST logout
+    this.router.post('/logout', this.controller.logout.bind(this.controller));
+    this.router.get('/logout', this.controller.logout.bind(this.controller));
   }
 
   getRouter() { return this.router; }
@@ -276,13 +282,11 @@ Kodėl taip:
 ```ejs
 <% if (currentUser) { %>
   <li class="nav-user">
-    <span class="user-chip">
+    <a href="/dashboard" class="user-chip">
       <span class="user-avatar"><%= (currentUser.email && currentUser.email[0] || '?').toUpperCase() %></span>
       <span class="user-email"><%= currentUser.email %></span>
-    </span>
-    <form method="post" action="/logout" style="display:inline">
-      <button type="submit" class="logout-button">Atsijungti</button>
-    </form>
+    </a>
+    <a href="/logout" class="logout-button" style="display:inline-block; text-decoration:none;">Atsijungti</a>
   </li>
 <% } else { %>
   <li><a href="/login">Prisijungti</a></li>
@@ -326,6 +330,59 @@ curl -i -X POST http://localhost:3000/login \
 ```
 
 Jei klaidos – 400 ir EJS grąžins formą su klaidomis. Sėkmės atveju – 302 redirect į `/`.
+
+---
+
+## RBAC (Role-Based Access Control) ir skydelis
+
+- `User.role`: `'user' | 'admin'` (default `'user'`).
+- Prisijungus nustatoma `req.session.user = { id, email, role }`.
+- Vienas įėjimo taškas: `/dashboard` visiems prisijungusiems.
+- Adminai toje pačioje skydelio UI mato papildomas korteles/nuorodas (pvz., „Administravimas“), o serverio pusėje admin-only maršrutai apsaugoti middleware.
+
+Middleware:
+```js
+// src/middleware/requireAuth.js
+module.exports = function requireAuth(req, res, next) {
+  if (!req.session || !req.session.user) return res.redirect('/login');
+  next();
+};
+
+// src/middleware/requireAdmin.js
+module.exports = function requireAdmin(req, res, next) {
+  if (!req.session || !req.session.user || req.session.user.role !== 'admin') {
+    return res.status(403).redirect('/dashboard'); // arba parodyti 403 puslapį
+  }
+  next();
+};
+```
+
+Pavyzdys (blog maršrutai):
+```js
+// src/routes/BlogRouter.js
+this.router.get('/create', requireAuth, requireAdmin, controller.showCreateForm);
+this.router.post('/create', requireAuth, requireAdmin, controller.createNewBlog);
+this.router.get('/:id/edit', requireAuth, requireAdmin, controller.showEditForm);
+this.router.post('/:id/edit', requireAuth, requireAdmin, controller.updateBlog);
+this.router.delete('/:id', requireAuth, requireAdmin, controller.deleteBlogPost);
+```
+
+Vartotojo skydelis:
+```js
+// src/routes/AccountRouter.js
+this.router.get('/dashboard', requireAuth, controller.getDashboardPage.bind(controller));
+```
+
+---
+
+## AccountService kodo stilius
+
+Venk vienos raidės kintamųjų; naudok aiškius pavadinimus:
+```js
+const userDoc = await User.findById(userId).lean();
+if (!userDoc) return null;
+return { id: userDoc._id.toString(), email: userDoc.email, firstName: userDoc.firstName || '', lastName: userDoc.lastName || '', phone: userDoc.phone || '' };
+```
 
 ---
 

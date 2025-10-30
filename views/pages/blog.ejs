@@ -5,11 +5,13 @@
   <h1 class="page-title">📝 Tinklaraštis</h1>
   
   <!-- Mygtukas naujam įrašui -->
-  <div class="mb-2">
-    <a href="/blog/create" class="btn btn-create">
-      ➕ Sukurti Naują Įrašą
-    </a>
-  </div>
+  <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin') { %>
+    <div class="mb-2">
+      <a href="/blog/create" class="btn btn-create">
+        ➕ Sukurti Naują Įrašą
+      </a>
+    </div>
+  <% } %>
   
   <% if (blogs.length > 0) { %>
     <div class="blog_cards">
@@ -53,7 +55,11 @@
       <% }) %>
     </div>
   <% } else { %>
-    <p class="no-blogs">Dar nėra blog įrašų. <a href="/create">Sukurkite pirmąjį!</a></p>
+    <p class="no-blogs">Dar nėra blog įrašų.
+      <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin') { %>
+        <a href="/blog/create">Sukurkite pirmąjį!</a>
+      <% } %>
+    </p>
   <% } %>
 </section>
 

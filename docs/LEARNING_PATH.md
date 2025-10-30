@@ -141,6 +141,7 @@ class AuthRouter {
     this.router.post('/login', this.controller.login.bind(this.controller));
     this.router.get('/register', this.controller.registerPage.bind(this.controller));
     this.router.post('/register', this.controller.register.bind(this.controller));
+    // Palaikome abu variantus (pritaikyta projekte):
     this.router.get('/logout', this.controller.logout.bind(this.controller));
   }
   getRouter() { return this.router; }
@@ -188,12 +189,13 @@ class AuthService {
 
 ---
 
-## 9. Profilis (/account)
+## 9. Profilis (/account) ir skydelis (/dashboard)
 
 - `requireAuth` vidutinis sluoksnis: jei ne prisijungęs – redirect į `/login`.
 - AccountService – gauna/atnaujina `firstName`, `lastName`, `phone`.
 - AccountController – GET/POST logika.
 - `account.ejs` – forma su laukais ir sėkmės pranešimu (flash).
+- `dashboard.ejs` – bendras skydelis visiems prisijungusiems; adminams rodomos papildomos kortelės/funkcijos.
 
 Flash idėja:
 ```js
@@ -364,8 +366,9 @@ function requireAuth(req, res, next) {
   - Jei pažymėta – `cookie.maxAge = 30 dienų`, kitaip – 1 diena.
 
 - 3) Roles/permissions
-  - Į `User` pridėk `role: 'user' | 'admin'`.
-  - `requireRole('admin')` middleware ir `/admin` puslapis.
+  - Į `User` pridėk `role: 'user' | 'admin'` (projete jau įgyvendinta).
+  - `requireRole('admin')` middleware ir admin-only veiksmai.
+  - Vienas įėjimo taškas: `/dashboard` (admin mato daugiau galimybių).
 
 - 4) Email verifikacija
   - Laukas `emailVerified: Boolean`.
