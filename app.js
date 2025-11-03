@@ -15,7 +15,7 @@ const mongoose = require('mongoose');
 const { connectToDatabase } = require('./src/config/database');
 const app = express();
 const PORT = 3000;
-const PagesRoutes = require('./src/routes/PagesRouter');
+const PagesRouter = require('./src/routes/PagesRouter');
 const authRouter = require('./src/routes/AuthRouter');
 const accountRouter = require('./src/routes/AccountRouter');
 const adminRouter = require('./src/routes/AdminRouter');
@@ -135,7 +135,7 @@ app.use('/api', apiRoutes);
 app.use('/', authRouter);
 app.use('/', accountRouter);
 app.use('/', adminRouter);
-app.use('/', PagesRoutes);
+app.use('/', PagesRouter);
 // ============================================
 // 404 ERROR HANDLER (PASKUTINIS!)
 // ============================================

@@ -1,11 +1,11 @@
 const express = require('express');
 const { AuthService } = require('../services/AuthService');
-const AutorizationController = require('../controllers/AutorizationController');
+const AuthorizationController = require('../controllers/AuthorizationController');
 
 class AuthRouter {
   constructor() {
     const service = new AuthService();
-    this.controller = AutorizationController.fromDependencies(service);
+    this.controller = AuthorizationController.fromDependencies(service);
     this.router = express.Router();
     this.initRoutes();
   }

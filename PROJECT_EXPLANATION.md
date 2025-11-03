@@ -16,17 +16,21 @@
 - `src/models/` – Mongoose modeliai (duomenų struktūros):
   - `blog.js` – blog įrašas.
   - `blogComment.js` – blog komentaro įrašas (su „replies“ sąrašu).
-- `src/controllers/` – „smegenys“, kurios priima užklausas ir grąžina atsakymus:
-  - `blogController.js` – logika blog sąrašui, detalei, kūrimui, trynimui.
-  - `blogCommentController.js` – logika komentarų gavimui/kūrimui/atsakymams.
-- `src/routes/` – URL keliai (kas į kurį kontrolerį nuveda):
-  - `blogRoutes.js` – puslapiai po `/blog`.
+  - `user.js` – naudotojas su `role: 'user' | 'admin'` (RBAC).
+- `src/controllers/` – „smegenys“, kurios priima užklausas ir grąžina atsakymus (class-based):
+  - `BlogController.js`, `BlogCommentController.js`, `AccountController.js`, `AutorizationController.js`.
+- `src/routes/` – class-based Router klasės:
+  - `BlogRouter.js` – puslapiai po `/blog` (sąrašas, detalė, create/edit/delete su RBAC).
+  - `AccountRouter.js` – `/dashboard`, `/account` (tik prisijungusiems).
+  - `AuthRouter.js` – `/login`, `/register`, `/logout`.
+  - `AdminRouter.js` – `/admin` → redirect į `/dashboard` (vienas įėjimo taškas).
   - `api/` – API keliai (pvz., komentarai po `/api/...`).
-- `src/middleware/logger.js` – tarpinė programa, kuri kiekvieną užklausą išspausdina į konsolę.
+- `src/middleware/` – tarpinės programos: `logger`, `requireAuth`, `requireAdmin`.
 - `views/` – EJS šablonai (HTML puslapiai):
   - `pages/blog.ejs` – visų įrašų sąrašas.
   - `pages/blog-detail.ejs` – vieno įrašo puslapis + komentarų UI.
   - `pages/create.ejs` – forma naujam įrašui sukurti.
+  - `pages/dashboard.ejs` – bendras skydelis visiems prisijungusiems.
   - `pages/404.ejs`, `pages/index.ejs`, ir pan.
 
 ---
@@ -37,7 +41,7 @@ Ką daro:
 - Užkrauna bibliotekas: `express`, `path`, `mongoose`, `dotenv`.
 - Užregistruoja middleware (pvz., `logger`, `express.json()` ir pan.).
 - Nustato EJS kaip šablonų variklį.
-- Prijungia routes (kelius): `/blog`, `/create`, `/api`.
+- Prijungia routes (kelius): `/blog`, `/api`, `/` (Auth/Account/Admin/Pages).
 - Prijungia prie MongoDB per `mongoose.connect(...)` ir tik tada paleidžia serverį.
 
 Pavyzdys (trumpai):
@@ -52,15 +56,18 @@ app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-const blogRoutes = require('./src/routes/blogRoutes');
-app.use('/blog', blogRoutes);
-
-const { showCreateForm, createNewBlog } = require('./src/controllers/blogController');
-app.get('/create', showCreateForm);
-app.post('/create', createNewBlog);
-
+// Class-based routeriai
+const blogRouter = require('./src/routes/BlogRouter');
+const authRouter = require('./src/routes/AuthRouter');
+const accountRouter = require('./src/routes/AccountRouter');
+const adminRouter = require('./src/routes/AdminRouter');
 const apiRoutes = require('./src/routes/api');
+
+app.use('/blog', blogRouter);
 app.use('/api', apiRoutes);
+app.use('/', authRouter);
+app.use('/', accountRouter);
+app.use('/', adminRouter);
 ```
 
 Idėja paprasta: kai ateina užklausa, Express suranda atitinkamą route, kviečia kontrolerį, o šis – modelį (DB), tada gražina HTML arba JSON.
@@ -108,17 +115,25 @@ const blogCommentSchema = new Schema({
 
 ## Keliai (Routes): `src/routes/`
 
-### `blogRoutes.js`
+### `BlogRouter.js`
 
 - `GET /blog` – rodo visų įrašų sąrašą (HTML puslapis).
 - `GET /blog/:id` – rodo vieną įrašą pagal ID (HTML puslapis).
-- `DELETE /blog/:id` – ištrina įrašą (grąžina JSON su `success` ir `redirectUrl`).
+- `GET /blog/create` – forma naujam įrašui (tik admin) – saugoma `requireAuth` + `requireAdmin`.
+- `POST /blog/create` – sukuria naują įrašą (tik admin) – saugoma `requireAuth` + `requireAdmin`.
+- `GET /blog/:id/edit` – redagavimo forma (tik admin).
+- `POST /blog/:id/edit` – atnaujinti (tik admin).
+- `DELETE /blog/:id` – ištrina įrašą (tik admin; JSON su `success` ir `redirectUrl`).
 
 Kodas (sutrumpintas):
 ```js
-router.get('/', getBlogList);
-router.get('/:id', getBlogDetail);
-router.delete('/:id', deleteBlogPost);
+this.router.get('/', controller.getBlogList.bind(controller));
+this.router.get('/create', requireAuth, requireAdmin, controller.showCreateForm.bind(controller));
+this.router.post('/create', requireAuth, requireAdmin, controller.createNewBlog.bind(controller));
+this.router.get('/:id', controller.getBlogDetail.bind(controller));
+this.router.get('/:id/edit', requireAuth, requireAdmin, controller.showEditForm.bind(controller));
+this.router.post('/:id/edit', requireAuth, requireAdmin, controller.updateBlog.bind(controller));
+this.router.delete('/:id', requireAuth, requireAdmin, controller.deleteBlogPost.bind(controller));
 ```
 
 ### API komentarams: `src/routes/api/index.js` ir `src/routes/api/commentRoutes.js`
@@ -181,7 +196,7 @@ response.render('pages/blog', { title: 'Tinklaraštis', blogs });
 
 ### `blog-detail.ejs` – vieno įrašo puslapis + komentarai
 - Parodo vieno įrašo turinį.
-- Turi mygtuką „Ištrinti įrašą“, kuris kviečia `DELETE /blog/:id` per `fetch`.
+- Turi mygtukus „Redaguoti“ ir „Ištrinti įrašą“ (rodomi tik adminams), trynimas kviečia `DELETE /blog/:id` per `fetch`.
 - Turi komentarų formą ir komentarų sąrašo vietą.
 - Viduje yra naršyklės JavaScript klasė `CommentSystem`, kuri:
   - Užkrauna komentarus: `GET /api/blog/:blogPostId/comments`.
@@ -198,7 +213,7 @@ if (data.success) {
 ```
 
 ### `create.ejs` – naujo įrašo kūrimo forma
-- Siunčia formą `POST /create`.
+- Siunčia formą `POST /blog/create`.
 - Serveris validuoja ir sukuria naują įrašą, po to nukreipia į `/blog/:id`.
 
 ---
@@ -217,7 +232,7 @@ if (data.success) {
 
 Pavyzdys: atidarai blog sąrašą (`GET /blog`)
 1. Naršyklė prašo `/blog`.
-2. `app.js` perduoda į `blogRoutes.js`, ten `router.get('/', getBlogList)`.
+2. `app.js` perduoda į `BlogRouter.js`, ten `this.router.get('/', ...)`.
 3. `blogController.getBlogList()` kviečia DB: `Blog.find().sort(...)`.
 4. Gauti duomenys (masyvas) paduodami į `views/pages/blog.ejs`.
 5. EJS sugeneruoja HTML ir naršyklė jį parodo.
@@ -278,7 +293,7 @@ Pavyzdys: ištrini įrašą
 3. Atverk naršyklę:
    - Pagrindinis: `http://localhost:3000/`
    - Tinklaraštis: `http://localhost:3000/blog`
-   - Kurti naują: `http://localhost:3000/create`
+   - Skydelis (prisijungusiems): `http://localhost:3000/dashboard`
 
 Pastaba: DB prisijungimas vyksta `app.js` faile su `mongoose.connect(...)`. Rekomenduojama realiam projekte laikyti DB prisijungimo URL `.env` faile.
 

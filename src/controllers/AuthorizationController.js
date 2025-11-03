@@ -1,10 +1,10 @@
-class AutorizationController {
+class AuthorizationController {
   constructor(authService) {
     this.authService = authService;
   }
 
   static fromDependencies(authService) {
-    return new AutorizationController(authService);
+    return new AuthorizationController(authService);
   }
 
   loginPage(req, res) {
@@ -55,4 +55,4 @@ class AutorizationController {
   }
 }
 
-module.exports = AutorizationController;
+module.exports = AuthorizationController;
