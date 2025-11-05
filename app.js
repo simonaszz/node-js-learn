@@ -21,8 +21,13 @@ const accountRouter = require('./src/routes/AccountRouter');
 const adminRouter = require('./src/routes/AdminRouter');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
+const cookieParser = require('cookie-parser');
 
 // ============================================
+
+
+app.use(cookieParser());
+
 // MIDDLEWARE (tvarka SVARBI!)
 // ============================================
 
